@@ -21,7 +21,11 @@
 </style>
 
 <div class="fc-form">
-	<?= ee('CP/Alert')->getAllInlines() ?>
+	<?php if (ee()->input->get('created')): ?>
+	<div style="background: #dff0d8; border: 1px solid #b2dba1; color: #3c763d; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px; font-size: 14px;">
+		<strong><?= lang('clone_success') ?></strong> — <?= sprintf(lang('clone_summary'), (int) ee()->input->get('created'), (int) ee()->input->get('sources'), (int) ee()->input->get('codes')) ?>
+	</div>
+	<?php endif; ?>
 	<?= form_open($base_url) ?>
 		<input type="hidden" name="action" value="clone">
 

@@ -123,12 +123,10 @@ class Reizoko_field_cloner_mcp
 		$cloner = new Cloner();
 		$results = $cloner->cloneFields($source_fields, $codes, $affix_position, $target_channels ?: array(), $source_group_id);
 
-		ee('CP/Alert')->makeInline('shared-form')
-			->asSuccess()
-			->withTitle(lang('clone_success'))
-			->addToBody(sprintf(lang('clone_summary'), $results['created'], count($source_fields), count($codes)))
-			->defer();
-
-		ee()->functions->redirect(ee('CP/URL')->make('addons/settings/reizoko_field_cloner'));
+		$url = ee('CP/URL')->make('addons/settings/reizoko_field_cloner');
+		$url->setQueryStringVariable('created', $results['created']);
+		$url->setQueryStringVariable('sources', count($source_fields));
+		$url->setQueryStringVariable('codes', count($codes));
+		ee()->functions->redirect($url);
 	}
 }
