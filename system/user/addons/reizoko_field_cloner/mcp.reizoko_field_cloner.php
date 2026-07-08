@@ -125,6 +125,7 @@ class Reizoko_field_cloner_mcp
 
 		$url = ee('CP/URL')->make('addons/settings/reizoko_field_cloner');
 		$url->setQueryStringVariable('created', $results['created']);
+		$url->setQueryStringVariable('reused', $results['reused']);
 		$url->setQueryStringVariable('sources', count($source_fields));
 		$url->setQueryStringVariable('codes', count($codes));
 		ee()->functions->redirect($url);

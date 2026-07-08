@@ -5,6 +5,11 @@ namespace Reizoko\FieldCloner\Engine;
 class Cloner
 {
 	/**
+	 * Whether the most recent _clone_single() call reused an existing field
+	 */
+	private $_last_reused = FALSE;
+
+	/**
 	 * Properties to copy from source to clone
 	 */
 	private static $_field_properties = array(
@@ -60,6 +65,7 @@ class Cloner
 	public function cloneFields($source_fields, $codes, $affix_position = 'suffix', $target_channels = array(), $source_group_id = 0)
 	{
 		$created = 0;
+		$reused = 0;
 		$skipped = 0;
 		$errors = array();
 
@@ -108,12 +114,20 @@ class Cloner
 					$this->_assign_to_channels($result, $target_channels);
 				}
 
-				$created++;
+				if ($this->_last_reused)
+				{
+					$reused++;
+				}
+				else
+				{
+					$created++;
+				}
 			}
 		}
 
 		return array(
 			'created' => $created,
+			'reused'  => $reused,
 			'skipped' => $skipped,
 			'errors'  => $errors,
 		);
@@ -200,8 +214,12 @@ class Cloner
 
 		if ($existing)
 		{
+			$this->_last_reused = TRUE;
+
 			return $existing;
 		}
+
+		$this->_last_reused = FALSE;
 
 		$clone = ee('Model')->make('ChannelField');
 
