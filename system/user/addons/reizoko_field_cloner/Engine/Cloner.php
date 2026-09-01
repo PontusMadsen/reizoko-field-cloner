@@ -257,6 +257,27 @@ class Cloner
 	 */
 	private function _clone_grid_columns($source_field_id, $clone_field_id)
 	{
+		ee()->load->model('grid_model');
+
+		// Cloning columns alone (the old behavior here) only copied the
+		// grid_columns metadata rows. It never created the field's own
+		// data table (exp_channel_grid_field_N), nor the per-column
+		// storage columns inside it, so every cloned Grid field crashed
+		// as soon as an entry using it was opened. Do what EE's own
+		// Grid_lib::apply_settings() does when a Grid field is saved
+		// from the CP: create the base table, then let each column's
+		// fieldtype add its own storage column to it.
+		ee()->grid_model->create_field((int) $clone_field_id, 'channel');
+
+		$ft_settings = array(
+			'id_field' => 'col_id',
+			'type_field' => 'col_type',
+			'col_settings_method' => 'grid_settings_modify_column',
+			'col_prefix' => 'col',
+			'fields_table' => 'grid_columns',
+			'data_table' => 'channel_grid_field_' . (int) $clone_field_id,
+		);
+
 		$columns = ee()->db
 			->where('field_id', (int) $source_field_id)
 			->order_by('col_order', 'asc')
@@ -267,7 +288,24 @@ class Cloner
 		{
 			unset($col['col_id']);
 			$col['field_id'] = (int) $clone_field_id;
+
 			ee()->db->insert('grid_columns', $col);
+			$col_id = ee()->db->insert_id();
+
+			$col_settings = is_array($col['col_settings'])
+				? $col['col_settings']
+				: json_decode($col['col_settings'], true);
+			$col_settings = is_array($col_settings) ? $col_settings : array();
+
+			ee()->api_channel_fields->setup_handler($col['col_type']);
+			ee()->api_channel_fields->set_datatype(
+				$col_id,
+				$col_settings,
+				array(),
+				true,
+				false,
+				$ft_settings
+			);
 		}
 	}
 
