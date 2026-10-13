@@ -9,6 +9,12 @@ class Reizoko_field_cloner_mcp
 	 */
 	public function index()
 	{
+		// Cloning creates fields and field groups, so restrict to Super Admins
+		if ( ! ee('Permission')->isSuperAdmin())
+		{
+			show_error(lang('unauthorized_access'), 403);
+		}
+
 		// Handle clone submission
 		if ( ! empty($_POST) && ee()->input->post('action') === 'clone')
 		{
@@ -60,8 +66,10 @@ class Reizoko_field_cloner_mcp
 		$language_codes = ee()->input->post('language_codes');
 		$target_channels = ee()->input->post('target_channels');
 
+		$affix_position = ($affix_position === 'prefix') ? 'prefix' : 'suffix';
+
 		// Parse language codes (comma-separated)
-		$codes = array_filter(array_map('trim', explode(',', $language_codes)));
+		$codes = array_unique(array_filter(array_map('trim', explode(',', (string) $language_codes))));
 
 		if (empty($codes))
 		{
@@ -72,6 +80,23 @@ class Reizoko_field_cloner_mcp
 				->now();
 
 			return $this->index();
+		}
+
+		// Codes become part of field and group names, which EE only allows
+		// to contain letters, numbers, dashes and underscores. Saving a model
+		// does not run EE's validation, so check here.
+		foreach ($codes as $code)
+		{
+			if ( ! preg_match('/^[A-Za-z0-9_-]{1,10}$/', $code))
+			{
+				ee('CP/Alert')->makeInline('shared-form')
+					->asIssue()
+					->withTitle(lang('clone_error'))
+					->addToBody(lang('invalid_language_codes'))
+					->now();
+
+				return $this->index();
+			}
 		}
 
 		// Gather source fields
@@ -99,7 +124,7 @@ class Reizoko_field_cloner_mcp
 		}
 		else
 		{
-			$field_ids = ee()->input->post('field_ids');
+			$field_ids = array_map('intval', (array) ee()->input->post('field_ids'));
 
 			if ( ! empty($field_ids))
 			{
@@ -118,10 +143,28 @@ class Reizoko_field_cloner_mcp
 			return $this->index();
 		}
 
+		// EE limits field names to 32 characters
+		foreach ($source_fields as $source)
+		{
+			foreach ($codes as $code)
+			{
+				if (strlen($source->field_name) + 1 + strlen($code) > 32)
+				{
+					ee('CP/Alert')->makeInline('shared-form')
+						->asIssue()
+						->withTitle(lang('clone_error'))
+						->addToBody(sprintf(lang('field_name_too_long'), $source->field_name, $code))
+						->now();
+
+					return $this->index();
+				}
+			}
+		}
+
 		// Clone
 		$source_group_id = ($source_type === 'group') ? (int) ee()->input->post('field_group_id') : 0;
 		$cloner = new Cloner();
-		$results = $cloner->cloneFields($source_fields, $codes, $affix_position, $target_channels ?: array(), $source_group_id);
+		$results = $cloner->cloneFields($source_fields, $codes, $affix_position, array_map('intval', (array) $target_channels), $source_group_id);
 
 		$url = ee('CP/URL')->make('addons/settings/reizoko_field_cloner');
 		$url->setQueryStringVariable('created', $results['created']);

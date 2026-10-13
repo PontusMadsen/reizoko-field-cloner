@@ -30,6 +30,8 @@ $lang = array(
 	'clone_error'          => 'Clone Error',
 	'no_language_codes'    => 'Please enter at least one language code.',
 	'no_fields_selected'   => 'No fields selected.',
+	'invalid_language_codes' => 'Language codes may only contain letters, numbers, dashes and underscores (max 10 characters each).',
+	'field_name_too_long'  => 'Cloning "%s" with code "%s" would exceed the 32 character field name limit.',
 
 	'supported_types'      => 'Supported field types',
 	'unsupported_warning'  => 'Unsupported types will be skipped during cloning.',
