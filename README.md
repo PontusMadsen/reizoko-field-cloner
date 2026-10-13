@@ -38,6 +38,19 @@ A utility addon that clones fields or entire field groups with prefix/suffix aff
 
 Each language code gets its own field group (e.g. "Products SE", "Products DE") with all cloned fields inside.
 
+## Security and notes
+
+- The Field Cloner screen is restricted to Super Admins, because it creates fields and field groups.
+- Language codes may contain letters, numbers, dashes and underscores (max 10 characters), and the resulting field name must fit EE's 32 character limit.
+- If a field with the target name already exists it is reused (and assigned to the new group and channels) rather than overwritten, so it is counted as "reused" in the summary.
+- Cloned fields keep the same label as the source field.
+
+## Documentation
+
+[reizoko.jp/en/addons/field-cloner.html](https://www.reizoko.jp/en/addons/field-cloner.html)
+
+More add-ons: [reizoko.jp](https://www.reizoko.jp/en/addons.html)
+
 ## License
 
-MIT
+[MIT](LICENSE)
