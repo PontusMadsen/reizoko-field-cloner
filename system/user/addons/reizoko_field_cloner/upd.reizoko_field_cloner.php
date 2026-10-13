@@ -2,7 +2,7 @@
 
 class Reizoko_field_cloner_upd
 {
-	public $version = '1.1.0';
+	public $version = '1.2.0';
 
 	public function install()
 	{
